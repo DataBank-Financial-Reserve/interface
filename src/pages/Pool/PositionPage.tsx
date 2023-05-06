@@ -346,7 +346,7 @@ const useInverter = ({
   }
 }
 
-function PositionPageUnsupportedContent() {
+export function PositionPageUnsupportedContent() {
   return (
     <PageWrapper>
       <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
@@ -403,7 +403,7 @@ function PositionPageContent() {
 
   // flag for receiving WETH
   const [receiveWETH, setReceiveWETH] = useState(false)
-  const nativeCurrency = useNativeCurrency()
+  const nativeCurrency = useNativeCurrency(chainId)
   const nativeWrappedSymbol = nativeCurrency.wrapped.symbol
 
   // construct Position from details returned
