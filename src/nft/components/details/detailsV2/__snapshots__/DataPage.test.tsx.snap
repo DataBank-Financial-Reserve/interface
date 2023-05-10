@@ -25,6 +25,24 @@ exports[`placeholder containers load 1`] = `
   justify-content: flex-start;
 }
 
+.c11 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: start;
+  -webkit-justify-content: flex-start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
 .c9 {
   color: #0D111C;
 }
@@ -43,8 +61,11 @@ exports[`placeholder containers load 1`] = `
   justify-content: flex-start;
 }
 
+.c15 {
+  height: 568px;
+}
+
 .c7 {
-  height: 288px;
   background: #FFFFFF;
   border-radius: 16px;
   padding: 16px 20px;
@@ -63,16 +84,10 @@ exports[`placeholder containers load 1`] = `
 .c10 {
   color: #0D111C;
   line-height: 24px;
-  cursor: default;
-}
-
-.c11 {
-  color: #0D111C;
-  line-height: 24px;
   cursor: pointer;
 }
 
-.c11:hover {
+.c10:hover {
   opacity: 0.6;
 }
 
@@ -84,6 +99,18 @@ exports[`placeholder containers load 1`] = `
 
 .c12:hover {
   opacity: 0.6;
+}
+
+.c14 {
+  background: #D2D9EE;
+  border-radius: 4px;
+  padding: 2px 4px;
+  color: #7780A0;
+  line-height: 12px;
+}
+
+.c13 {
+  height: 252px;
 }
 
 .c2 {
@@ -118,6 +145,9 @@ exports[`placeholder containers load 1`] = `
 .c6 {
   gap: 24px;
   width: 100%;
+  -webkit-align-self: flex-start;
+  -ms-flex-item-align: start;
+  align-self: flex-start;
 }
 
 @media screen and (max-width:640px) {
@@ -156,68 +186,83 @@ exports[`placeholder containers load 1`] = `
       >
         <div
           class="c7"
-          style="height: 528px;"
         >
           <div
             class="c3 c4 c8"
           >
             <div
-              class="c9 c10 css-6ms77s"
+              class="c9 c10 css-rjqmed"
             >
-              Traits
+              <div
+                class="c3 c11"
+              >
+                Description
+              </div>
+            </div>
+            <div
+              class="c9 c12 css-rjqmed"
+            >
+              <div
+                class="c3 c11"
+              >
+                Details
+              </div>
             </div>
           </div>
-          <div>
-            Traits Content
-          </div>
-        </div>
-        <div
-          class="c7"
-          style="height: 288px;"
-        >
           <div
-            class="c3 c4 c8"
+            class="c13"
           >
-            <div
-              class="c9 c11 css-6ms77s"
-            >
-              Description
-            </div>
-            <div
-              class="c9 c12 css-6ms77s"
-            >
-              Details
-            </div>
-          </div>
-          <div>
             Description Content
           </div>
         </div>
       </div>
       <div
         class="c7"
-        style="height: 604px;"
       >
         <div
           class="c3 c4 c8"
         >
           <div
-            class="c9 c11 css-6ms77s"
+            class="c9 c10 css-rjqmed"
           >
-            Activity
+            <div
+              class="c3 c11"
+            >
+              Activity
+            </div>
           </div>
           <div
-            class="c9 c12 css-6ms77s"
+            class="c9 c12 css-rjqmed"
           >
-            Offers
+            <div
+              class="c3 c11"
+            >
+              Offers
+              <div
+                class="c14 css-f8aq60"
+              >
+                10+
+              </div>
+            </div>
           </div>
           <div
-            class="c9 c12 css-6ms77s"
+            class="c9 c12 css-rjqmed"
           >
-            Listings
+            <div
+              class="c3 c11"
+            >
+              Listings
+              <div
+                class="c14 css-f8aq60"
+              >
+                10+
+              </div>
+            </div>
           </div>
         </div>
-        <div>
+        <div
+          class="c15"
+        >
           Activity Content
         </div>
       </div>
