@@ -8,8 +8,7 @@ import {
   InterfaceSectionName,
   SwapEventName,
 } from '@uniswap/analytics-events'
-import { Trade } from '@uniswap/router-sdk'
-import { Currency, CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Percent, Token } from '@uniswap/sdk-core'
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { useToggleAccountDrawer } from 'components/AccountDrawer'
@@ -39,6 +38,7 @@ import { TradeState } from 'state/routing/types'
 import styled, { useTheme } from 'styled-components/macro'
 import invariant from 'tiny-invariant'
 import { currencyAmountToPreciseFloat, formatTransactionAmount } from 'utils/formatNumbers'
+import { didUserReject } from 'utils/swapErrorToUserReadableMessage'
 import { switchChain } from 'utils/switchChain'
 
 import AddressInputPanel from '../../components/AddressInputPanel'
@@ -115,11 +115,11 @@ const OutputSwapSection = styled(SwapSection)`
 `
 
 function getIsValidSwapQuote(
-  trade: InterfaceTrade<Currency, Currency, TradeType> | undefined,
+  trade: InterfaceTrade | undefined,
   tradeState: TradeState,
   swapInputError?: ReactNode
 ): boolean {
-  return !!swapInputError && !!trade && (tradeState === TradeState.VALID || tradeState === TradeState.SYNCING)
+  return Boolean(swapInputError && trade && tradeState === TradeState.VALID)
 }
 
 function largerPercentValue(a?: Percent, b?: Percent) {
@@ -293,7 +293,7 @@ export function Swap({
   const fiatValueOutput = useUSDPrice(parsedAmounts[Field.OUTPUT])
 
   const [routeNotFound, routeIsLoading, routeIsSyncing] = useMemo(
-    () => [!trade?.swaps, TradeState.LOADING === tradeState, TradeState.SYNCING === tradeState],
+    () => [!trade?.swaps, TradeState.LOADING === tradeState, TradeState.LOADING === tradeState && Boolean(trade)],
     [trade, tradeState]
   )
 
@@ -336,7 +336,7 @@ export function Swap({
   // modal and loading
   const [{ showConfirm, tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
     showConfirm: boolean
-    tradeToConfirm: Trade<Currency, Currency, TradeType> | undefined
+    tradeToConfirm: InterfaceTrade | undefined
     attemptingTxn: boolean
     swapErrorMessage: string | undefined
     txHash: string | undefined
@@ -417,10 +417,20 @@ export function Swap({
     if (stablecoinPriceImpact && !confirmPriceImpactWithoutFee(stablecoinPriceImpact)) {
       return
     }
-    setSwapState({ attemptingTxn: true, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: undefined })
+    setSwapState((currentState) => ({
+      ...currentState,
+      attemptingTxn: true,
+      swapErrorMessage: undefined,
+      txHash: undefined,
+    }))
     swapCallback()
       .then((hash) => {
-        setSwapState({ attemptingTxn: false, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: hash })
+        setSwapState((currentState) => ({
+          ...currentState,
+          attemptingTxn: false,
+          swapErrorMessage: undefined,
+          txHash: hash,
+        }))
         sendEvent({
           category: 'Swap',
           action: 'transaction hash',
@@ -440,19 +450,16 @@ export function Swap({
         })
       })
       .catch((error) => {
-        setSwapState({
+        setSwapState((currentState) => ({
+          ...currentState,
           attemptingTxn: false,
-          tradeToConfirm,
-          showConfirm,
           swapErrorMessage: error.message,
           txHash: undefined,
-        })
+        }))
       })
   }, [
     swapCallback,
     stablecoinPriceImpact,
-    tradeToConfirm,
-    showConfirm,
     recipient,
     recipientAddress,
     account,
@@ -471,16 +478,16 @@ export function Swap({
   }, [stablecoinPriceImpact, trade])
 
   const handleConfirmDismiss = useCallback(() => {
-    setSwapState({ showConfirm: false, tradeToConfirm, attemptingTxn, swapErrorMessage, txHash })
+    setSwapState((currentState) => ({ ...currentState, showConfirm: false }))
     // if there was a tx hash, we want to clear the input
     if (txHash) {
       onUserInput(Field.INPUT, '')
     }
-  }, [attemptingTxn, onUserInput, swapErrorMessage, tradeToConfirm, txHash])
+  }, [onUserInput, txHash])
 
   const handleAcceptChanges = useCallback(() => {
-    setSwapState({ tradeToConfirm: trade, swapErrorMessage, txHash, attemptingTxn, showConfirm })
-  }, [attemptingTxn, showConfirm, swapErrorMessage, trade, txHash])
+    setSwapState((currentState) => ({ ...currentState, tradeToConfirm: trade }))
+  }, [trade])
 
   const handleInputSelect = useCallback(
     (inputCurrency: Currency) => {
@@ -571,22 +578,22 @@ export function Swap({
         showCancel={true}
       />
       <SwapHeader autoSlippage={autoSlippage} />
-      <ConfirmSwapModal
-        isOpen={showConfirm}
-        trade={trade}
-        originalTrade={tradeToConfirm}
-        onAcceptChanges={handleAcceptChanges}
-        attemptingTxn={attemptingTxn}
-        txHash={txHash}
-        recipient={recipient}
-        allowedSlippage={allowedSlippage}
-        onConfirm={handleSwap}
-        swapErrorMessage={swapErrorMessage}
-        onDismiss={handleConfirmDismiss}
-        swapQuoteReceivedDate={swapQuoteReceivedDate}
-        fiatValueInput={fiatValueTradeInput}
-        fiatValueOutput={fiatValueTradeOutput}
-      />
+      {trade && showConfirm && (
+        <ConfirmSwapModal
+          trade={trade}
+          originalTrade={tradeToConfirm}
+          onAcceptChanges={handleAcceptChanges}
+          attemptingTxn={attemptingTxn}
+          txHash={txHash}
+          allowedSlippage={allowedSlippage}
+          onConfirm={handleSwap}
+          swapErrorMessage={swapErrorMessage}
+          onDismiss={handleConfirmDismiss}
+          swapQuoteReceivedDate={swapQuoteReceivedDate}
+          fiatValueInput={fiatValueTradeInput}
+          fiatValueOutput={fiatValueTradeOutput}
+        />
+      )}
 
       <div style={{ display: 'relative' }}>
         <SwapSection>
@@ -696,8 +703,17 @@ export function Swap({
             </TraceEvent>
           ) : chainId && chainId !== connectedChainId ? (
             <ButtonPrimary
-              onClick={() => {
-                switchChain(connector, chainId)
+              onClick={async () => {
+                try {
+                  await switchChain(connector, chainId)
+                } catch (error) {
+                  if (didUserReject(error)) {
+                    // Ignore error, which keeps the user on the previous chain.
+                  } else {
+                    // TODO(WEB-3306): This UX could be improved to show an error state.
+                    throw error
+                  }
+                }
               }}
             >
               Connect to {getChainInfo(chainId)?.label}
