@@ -15208,9 +15208,9 @@ mini-css-extract-plugin@^2.4.5, mini-css-extract-plugin@^2.7.6:
   dependencies:
     schema-utils "^4.0.0"
 
-miniflare@3.20230904.0:
-  version "3.20230904.0"
-  resolved "https://registry.yarnpkg.com/miniflare/-/miniflare-3.20230904.0.tgz#66690cadb20fec5b7584ce7732e53f16855ef49a"
+miniflare@3.20231030.2:
+  version "3.20231030.2"
+  resolved "https://registry.yarnpkg.com/miniflare/-/miniflare-3.20231030.2.tgz#66690cadb20fec5b7584ce7732e53f16855ef49a"
   integrity sha512-+OWQqEk8hV7vZaPCoj5dk1lZr4YUy56OiyNZ45/3ITYf+ZxgQOBPWhQhpw1jCahkRKGPa9Aykz01sc+GhPZYDA==
   dependencies:
     acorn "^8.8.0"
