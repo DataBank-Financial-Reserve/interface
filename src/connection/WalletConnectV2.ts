@@ -1,8 +1,9 @@
-import { sendAnalyticsEvent } from '@uniswap/analytics'
+import { ChainId } from '@uniswap/sdk-core'
 import { URI_AVAILABLE, WalletConnect, WalletConnectConstructorArgs } from '@web3-react/walletconnect-v2'
-import { L1_CHAIN_IDS, L2_CHAIN_IDS, SupportedChainId } from 'constants/chains'
+import { sendAnalyticsEvent } from 'analytics'
+import { L1_CHAIN_IDS, L2_CHAIN_IDS } from 'constants/chains'
 import { Z_INDEX } from 'theme/zIndex'
-import { isIOS } from 'utils/userAgent'
+import { isAndroid, isIOS } from 'utils/userAgent'
 
 import { RPC_URLS } from '../constants/networks'
 
@@ -15,22 +16,21 @@ const RPC_URLS_WITHOUT_FALLBACKS = Object.entries(RPC_URLS).reduce(
   }),
   {}
 )
-const optionalChains = [...L1_CHAIN_IDS, ...L2_CHAIN_IDS].filter((x) => x !== SupportedChainId.MAINNET)
-
 export class WalletConnectV2 extends WalletConnect {
   ANALYTICS_EVENT = 'Wallet Connect QR Scan'
   constructor({
     actions,
-    onError,
+    defaultChainId,
     qrcode = true,
-  }: Omit<WalletConnectConstructorArgs, 'options'> & { qrcode?: boolean }) {
+    onError,
+  }: Omit<WalletConnectConstructorArgs, 'options'> & { defaultChainId: number; qrcode?: boolean }) {
     const darkmode = Boolean(window.matchMedia('(prefers-color-scheme: dark)'))
     super({
       actions,
       options: {
         projectId: process.env.REACT_APP_WALLET_CONNECT_PROJECT_ID as string,
-        optionalChains,
-        chains: [SupportedChainId.MAINNET],
+        chains: [defaultChainId],
+        optionalChains: [...L1_CHAIN_IDS, ...L2_CHAIN_IDS],
         showQrModal: qrcode,
         rpcMap: RPC_URLS_WITHOUT_FALLBACKS,
         // as of 6/16/2023 there are no docs for `optionalMethods`
@@ -47,8 +47,8 @@ export class WalletConnectV2 extends WalletConnect {
           termsOfServiceUrl: undefined,
           themeMode: darkmode ? 'dark' : 'light',
           themeVariables: {
-            '--w3m-font-family': '"Inter custom", sans-serif',
-            '--w3m-z-index': Z_INDEX.modal.toString(),
+            '--wcm-font-family': '"Inter custom", sans-serif',
+            '--wcm-z-index': Z_INDEX.modal.toString(),
           },
           walletImages: undefined,
         },
@@ -70,7 +70,7 @@ export class UniwalletConnect extends WalletConnectV2 {
 
   constructor({ actions, onError }: Omit<WalletConnectConstructorArgs, 'options'>) {
     // disables walletconnect's proprietary qr code modal; instead UniwalletModal will listen for events to trigger our custom modal
-    super({ actions, qrcode: false, onError })
+    super({ actions, defaultChainId: ChainId.MAINNET, qrcode: false, onError })
 
     this.events.once(URI_AVAILABLE, () => {
       this.provider?.events.on('disconnect', this.deactivate)
@@ -78,15 +78,15 @@ export class UniwalletConnect extends WalletConnectV2 {
 
     this.events.on(URI_AVAILABLE, (uri) => {
       if (!uri) return
+
       // Emits custom wallet connect code, parseable by the Uniswap Wallet
-      this.events.emit(UniwalletConnect.UNI_URI_AVAILABLE, `hello_uniwallet:${uri}`)
+      this.events.emit(UniwalletConnect.UNI_URI_AVAILABLE, `https://uniswap.org/app/wc?uri=${uri}`)
 
       // Opens deeplink to Uniswap Wallet if on iOS
-      if (isIOS) {
-        const newTab = window.open(`https://uniswap.org/app/wc?uri=${encodeURIComponent(uri)}`)
-
-        // Fixes blank tab opening on mobile Chrome
-        newTab?.close()
+      if (isIOS || isAndroid) {
+        // Using window.location.href to open the deep link ensures smooth navigation and leverages OS handling for installed apps,
+        // avoiding potential popup blockers or inconsistent behavior associated with window.open
+        window.location.href = `uniswap://wc?uri=${encodeURIComponent(uri)}`
       }
     })
   }

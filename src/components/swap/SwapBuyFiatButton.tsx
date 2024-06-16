@@ -1,24 +1,17 @@
 import { Trans } from '@lingui/macro'
-import { TraceEvent } from '@uniswap/analytics'
 import { BrowserEvent, InterfaceElementName, SharedEventName } from '@uniswap/analytics-events'
 import { useWeb3React } from '@web3-react/core'
+import { TraceEvent } from 'analytics'
 import { useAccountDrawer } from 'components/AccountDrawer'
 import { ButtonText } from 'components/Button'
 import { MouseoverTooltip } from 'components/Tooltip'
 import { useCallback, useEffect, useState } from 'react'
-import { useBuyFiatFlowCompleted } from 'state/user/hooks'
-import styled from 'styled-components/macro'
-import { ExternalLink } from 'theme'
+import styled from 'styled-components'
+import { ExternalLink } from 'theme/components'
+import { isPathBlocked } from 'utils/blockedPaths'
 
 import { useFiatOnrampAvailability, useOpenModal } from '../../state/application/hooks'
 import { ApplicationModal } from '../../state/application/reducer'
-
-const Dot = styled.div`
-  height: 8px;
-  width: 8px;
-  background-color: ${({ theme }) => theme.accentActive};
-  border-radius: 50%;
-`
 
 export const MOONPAY_REGION_AVAILABILITY_ARTICLE =
   'https://support.uniswap.org/hc/en-us/articles/11306664890381-Why-isn-t-MoonPay-available-in-my-region-'
@@ -33,20 +26,27 @@ enum BuyFiatFlowState {
 }
 
 const StyledTextButton = styled(ButtonText)`
-  color: ${({ theme }) => theme.textSecondary};
+  color: ${({ theme }) => theme.neutral2};
   gap: 4px;
+  font-weight: 485;
+  transition-duration: ${({ theme }) => theme.transition.duration.fast};
+  transition-timing-function: ease-in-out;
+  transition-property: opacity, color, background-color;
   &:focus {
     text-decoration: none;
   }
   &:active {
     text-decoration: none;
   }
+  :hover {
+    opacity: ${({ theme }) => theme.opacity.hover};
+  }
 `
 
 export default function SwapBuyFiatButton() {
   const { account } = useWeb3React()
   const openFiatOnRampModal = useOpenModal(ApplicationModal.FIAT_ONRAMP)
-  const [buyFiatFlowCompleted, setBuyFiatFlowCompleted] = useBuyFiatFlowCompleted()
+  const shouldShowBuyFiatButton = !isPathBlocked('/buy')
   const [checkFiatRegionAvailability, setCheckFiatRegionAvailability] = useState(false)
   const {
     available: fiatOnrampAvailable,
@@ -73,10 +73,8 @@ export default function SwapBuyFiatButton() {
       setBuyFiatFlowState(BuyFiatFlowState.ACTIVE_NEEDS_ACCOUNT)
     } else if (fiatOnrampAvailable && account) {
       openFiatOnRampModal()
-      setBuyFiatFlowCompleted(true)
       setBuyFiatFlowState(BuyFiatFlowState.INACTIVE)
     } else if (!fiatOnrampAvailable) {
-      setBuyFiatFlowCompleted(true)
       setBuyFiatFlowState(BuyFiatFlowState.INACTIVE)
     }
   }, [
@@ -86,7 +84,6 @@ export default function SwapBuyFiatButton() {
     walletDrawerOpen,
     toggleWalletDrawer,
     openFiatOnRampModal,
-    setBuyFiatFlowCompleted,
   ])
 
   // Continue buy fiat flow automatically when requisite state changes have occured.
@@ -107,6 +104,10 @@ export default function SwapBuyFiatButton() {
 
   const fiatOnRampsUnavailableTooltipDisabled =
     !fiatOnrampAvailabilityChecked || (fiatOnrampAvailabilityChecked && fiatOnrampAvailable)
+
+  if (!shouldShowBuyFiatButton) {
+    return null
+  }
 
   return (
     <MouseoverTooltip
@@ -135,7 +136,6 @@ export default function SwapBuyFiatButton() {
       >
         <StyledTextButton onClick={handleBuyCrypto} disabled={buyCryptoButtonDisabled} data-testid="buy-fiat-button">
           <Trans>Buy</Trans>
-          {!buyFiatFlowCompleted && <Dot data-testid="buy-fiat-flow-incomplete-indicator" />}
         </StyledTextButton>
       </TraceEvent>
     </MouseoverTooltip>

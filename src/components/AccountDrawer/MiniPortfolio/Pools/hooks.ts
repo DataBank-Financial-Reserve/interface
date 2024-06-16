@@ -1,12 +1,17 @@
-import { Token } from '@uniswap/sdk-core'
-import { AddressMap } from '@uniswap/smart-order-router'
+import {
+  ChainId,
+  MULTICALL_ADDRESSES,
+  NONFUNGIBLE_POSITION_MANAGER_ADDRESSES as V3NFT_ADDRESSES,
+  Token,
+} from '@uniswap/sdk-core'
+import type { AddressMap } from '@uniswap/smart-order-router'
 import MulticallJSON from '@uniswap/v3-periphery/artifacts/contracts/lens/UniswapInterfaceMulticall.sol/UniswapInterfaceMulticall.json'
 import NFTPositionManagerJSON from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import { useWeb3React } from '@web3-react/core'
-import { MULTICALL_ADDRESS, NONFUNGIBLE_POSITION_MANAGER_ADDRESSES as V3NFT_ADDRESSES } from 'constants/addresses'
-import { isSupportedChain, SupportedChainId } from 'constants/chains'
-import { RPC_PROVIDERS } from 'constants/providers'
+import { isSupportedChain } from 'constants/chains'
+import { DEPRECATED_RPC_PROVIDERS, RPC_PROVIDERS } from 'constants/providers'
 import { BaseContract } from 'ethers/lib/ethers'
+import { useFallbackProviderEnabled } from 'featureFlags/flags/fallbackProvider'
 import { ContractInput, useUniswapPricesQuery } from 'graphql/data/__generated__/types-and-hooks'
 import { toContractInput } from 'graphql/data/util'
 import useStablecoinPrice from 'hooks/useStablecoinPrice'
@@ -23,31 +28,40 @@ type ContractMap<T extends BaseContract> = { [key: number]: T }
 function useContractMultichain<T extends BaseContract>(
   addressMap: AddressMap,
   ABI: any,
-  chainIds?: SupportedChainId[]
+  chainIds?: ChainId[]
 ): ContractMap<T> {
   const { chainId: walletChainId, provider: walletProvider } = useWeb3React()
+
+  const networkProviders = useFallbackProviderEnabled() ? RPC_PROVIDERS : DEPRECATED_RPC_PROVIDERS
 
   return useMemo(() => {
     const relevantChains =
       chainIds ??
       Object.keys(addressMap)
         .map((chainId) => parseInt(chainId))
-        .filter(isSupportedChain)
+        .filter((chainId) => isSupportedChain(chainId))
 
     return relevantChains.reduce((acc: ContractMap<T>, chainId) => {
-      const provider = walletProvider && walletChainId === chainId ? walletProvider : RPC_PROVIDERS[chainId]
-      acc[chainId] = getContract(addressMap[chainId], ABI, provider) as T
+      const provider =
+        walletProvider && walletChainId === chainId
+          ? walletProvider
+          : isSupportedChain(chainId)
+          ? networkProviders[chainId]
+          : undefined
+      if (provider) {
+        acc[chainId] = getContract(addressMap[chainId] ?? '', ABI, provider) as T
+      }
       return acc
     }, {})
-  }, [ABI, addressMap, chainIds, walletChainId, walletProvider])
+  }, [ABI, addressMap, chainIds, networkProviders, walletChainId, walletProvider])
 }
 
-export function useV3ManagerContracts(chainIds: SupportedChainId[]): ContractMap<NonfungiblePositionManager> {
+export function useV3ManagerContracts(chainIds: ChainId[]): ContractMap<NonfungiblePositionManager> {
   return useContractMultichain<NonfungiblePositionManager>(V3NFT_ADDRESSES, NFTPositionManagerJSON.abi, chainIds)
 }
 
-export function useInterfaceMulticallContracts(chainIds: SupportedChainId[]): ContractMap<UniswapInterfaceMulticall> {
-  return useContractMultichain<UniswapInterfaceMulticall>(MULTICALL_ADDRESS, MulticallJSON.abi, chainIds)
+export function useInterfaceMulticallContracts(chainIds: ChainId[]): ContractMap<UniswapInterfaceMulticall> {
+  return useContractMultichain<UniswapInterfaceMulticall>(MULTICALL_ADDRESSES, MulticallJSON.abi, chainIds)
 }
 
 type PriceMap = { [key: CurrencyKey]: number | undefined }

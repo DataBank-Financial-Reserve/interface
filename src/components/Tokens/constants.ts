@@ -1,5 +1,6 @@
-import { SupportedChainId } from 'constants/chains'
+import { ChainId } from '@uniswap/sdk-core'
 
+// Breakpoints specifically for the token pages
 export const MAX_WIDTH_MEDIA_BREAKPOINT = '1200px'
 export const XLARGE_MEDIA_BREAKPOINT = '960px'
 export const LARGE_MEDIA_BREAKPOINT = '840px'
@@ -8,4 +9,4 @@ export const SMALL_MEDIA_BREAKPOINT = '540px'
 export const MOBILE_MEDIA_BREAKPOINT = '420px'
 
 // includes chains that the backend does not current source off-chain metadata for
-export const UNSUPPORTED_METADATA_CHAINS = [SupportedChainId.BNB]
+export const UNSUPPORTED_METADATA_CHAINS = [ChainId.BNB, ChainId.AVALANCHE]

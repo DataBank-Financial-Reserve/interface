@@ -6,7 +6,6 @@ export const SUPPORTED_LOCALES = [
   'ca-ES',
   'cs-CZ',
   'da-DK',
-  'de-DE',
   'el-GR',
   'es-ES',
   'fi-FI',
@@ -33,9 +32,10 @@ export const SUPPORTED_LOCALES = [
   'zh-CN',
   'zh-TW',
 ]
-export type SupportedLocale = typeof SUPPORTED_LOCALES[number]
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const DEFAULT_LOCALE: SupportedLocale = 'en-US'
+export { messages as DEFAULT_MESSAGES } from 'locales/en-US'
 
 export const LOCALE_LABEL: { [locale in SupportedLocale]: string } = {
   'af-ZA': 'Afrikaans',
@@ -43,7 +43,6 @@ export const LOCALE_LABEL: { [locale in SupportedLocale]: string } = {
   'ca-ES': 'Català',
   'cs-CZ': 'čeština',
   'da-DK': 'dansk',
-  'de-DE': 'Deutsch',
   'el-GR': 'ελληνικά',
   'en-US': 'English',
   'es-ES': 'Español',

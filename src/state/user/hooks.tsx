@@ -1,4 +1,4 @@
-import { Percent, Token } from '@uniswap/sdk-core'
+import { Percent, Token, V2_FACTORY_ADDRESSES } from '@uniswap/sdk-core'
 import { computePairAddress, Pair } from '@uniswap/v2-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { L2_CHAIN_IDS } from 'constants/chains'
@@ -7,19 +7,16 @@ import { L2_DEADLINE_FROM_NOW } from 'constants/misc'
 import JSBI from 'jsbi'
 import { useCallback, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
-import { RouterPreference } from 'state/routing/slice'
+import { RouterPreference } from 'state/routing/types'
 import { UserAddedToken } from 'types/tokens'
 
-import { V2_FACTORY_ADDRESSES } from '../../constants/addresses'
 import { BASES_TO_TRACK_LIQUIDITY_FOR, PINNED_PAIRS } from '../../constants/routing'
 import { useDefaultActiveTokens } from '../../hooks/Tokens'
-import { AppState } from '../types'
 import {
   addSerializedPair,
   addSerializedToken,
+  updateHideAndroidAnnouncementBanner,
   updateHideClosedPositions,
-  updateHideUniswapWalletBanner,
-  updateUserBuyFiatFlowCompleted,
   updateUserDeadline,
   updateUserLocale,
   updateUserRouterPreference,
@@ -63,18 +60,6 @@ export function useUserLocaleManager(): [SupportedLocale | null, (newLocale: Sup
   )
 
   return [locale, setLocale]
-}
-
-export function useBuyFiatFlowCompleted(): [boolean | undefined, (buyFiatFlowCompleted: boolean) => void] {
-  const dispatch = useAppDispatch()
-  const buyFiatFlowCompleted = useAppSelector((state) => state.user.buyFiatFlowCompleted)
-  const setBuyFiatFlowCompleted = useCallback(
-    (buyFiatFlowCompleted: boolean) => {
-      dispatch(updateUserBuyFiatFlowCompleted(buyFiatFlowCompleted))
-    },
-    [dispatch]
-  )
-  return [buyFiatFlowCompleted, setBuyFiatFlowCompleted]
 }
 
 export function useRouterPreference(): [RouterPreference, (routerPreference: RouterPreference) => void] {
@@ -221,19 +206,15 @@ export function usePairAdder(): (pair: Pair) => void {
   )
 }
 
-export function useURLWarningVisible(): boolean {
-  return useAppSelector((state: AppState) => state.user.URLWarningVisible)
-}
-
-export function useHideUniswapWalletBanner(): [boolean, () => void] {
+export function useHideAndroidAnnouncementBanner(): [boolean, () => void] {
   const dispatch = useAppDispatch()
-  const hideUniswapWalletBanner = useAppSelector((state) => state.user.hideUniswapWalletBanner)
+  const hideAndroidAnnouncementBanner = useAppSelector((state) => state.user.hideAndroidAnnouncementBanner)
 
-  const toggleHideUniswapWalletBanner = useCallback(() => {
-    dispatch(updateHideUniswapWalletBanner({ hideUniswapWalletBanner: true }))
+  const toggleHideAndroidAnnouncementBanner = useCallback(() => {
+    dispatch(updateHideAndroidAnnouncementBanner({ hideAndroidAnnouncementBanner: true }))
   }, [dispatch])
 
-  return [hideUniswapWalletBanner, toggleHideUniswapWalletBanner]
+  return [hideAndroidAnnouncementBanner, toggleHideAndroidAnnouncementBanner]
 }
 
 /**

@@ -1,22 +1,28 @@
-import { BigintIsh, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
+import { BigintIsh, ChainId, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 // This file is lazy-loaded, so the import of smart-order-router is intentional.
-// eslint-disable-next-line no-restricted-imports
-import { AlphaRouter, AlphaRouterConfig, ChainId } from '@uniswap/smart-order-router'
-import { SupportedChainId } from 'constants/chains'
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { AlphaRouter, AlphaRouterConfig } from '@uniswap/smart-order-router'
+import { asSupportedChain } from 'constants/chains'
+import { DEPRECATED_RPC_PROVIDERS } from 'constants/providers'
 import { nativeOnChain } from 'constants/tokens'
 import JSBI from 'jsbi'
-import { GetQuoteArgs } from 'state/routing/slice'
-import { QuoteResult, QuoteState, SwapRouterNativeAssets } from 'state/routing/types'
+import { GetQuoteArgs, QuoteResult, QuoteState, SwapRouterNativeAssets } from 'state/routing/types'
 import { transformSwapRouteToGetQuoteResult } from 'utils/transformSwapRouteToGetQuoteResult'
 
-export function toSupportedChainId(chainId: ChainId): SupportedChainId | undefined {
-  const numericChainId: number = chainId
-  if (SupportedChainId[numericChainId]) return numericChainId
-  return undefined
-}
-export function isSupportedChainId(chainId: ChainId | undefined): boolean {
-  if (chainId === undefined) return false
-  return toSupportedChainId(chainId) !== undefined
+const routers = new Map<ChainId, AlphaRouter>()
+export function getRouter(chainId: ChainId): AlphaRouter {
+  const router = routers.get(chainId)
+  if (router) return router
+
+  const supportedChainId = asSupportedChain(chainId)
+  if (supportedChainId) {
+    const provider = DEPRECATED_RPC_PROVIDERS[supportedChainId]
+    const router = new AlphaRouter({ chainId, provider })
+    routers.set(chainId, router)
+    return router
+  }
+
+  throw new Error(`Router does not support this chain (chainId: ${chainId}).`)
 }
 
 async function getQuote(

@@ -1,19 +1,14 @@
 import { Trans } from '@lingui/macro'
+import { ChainId } from '@uniswap/sdk-core'
 import { getChainInfo } from 'constants/chainInfo'
-import { SupportedChainId } from 'constants/chains'
-import { darken } from 'polished'
 import { useState } from 'react'
-import styled from 'styled-components/macro'
-import { ThemedText } from 'theme'
+import styled from 'styled-components'
+import { ThemedText } from 'theme/components'
 import { textFadeIn } from 'theme/styles'
 
 import Resource from './Resource'
+import { NoInfoAvailable, TRUNCATE_CHARACTER_COUNT, truncateDescription, TruncateDescriptionButton } from './shared'
 
-const NoInfoAvailable = styled.span`
-  color: ${({ theme }) => theme.textTertiary};
-  font-weight: 400;
-  font-size: 16px;
-`
 const TokenDescriptionContainer = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
@@ -23,32 +18,6 @@ const TokenDescriptionContainer = styled.div`
   line-height: 24px;
   white-space: pre-wrap;
 `
-
-const TruncateDescriptionButton = styled.div`
-  color: ${({ theme }) => theme.textSecondary};
-  font-weight: 400;
-  font-size: 0.85em;
-  padding-top: 0.5em;
-
-  &:hover,
-  &:focus {
-    color: ${({ theme }) => darken(0.1, theme.textSecondary)};
-    cursor: pointer;
-  }
-`
-
-const truncateDescription = (desc: string) => {
-  //trim the string to the maximum length
-  let tokenDescriptionTruncated = desc.slice(0, TRUNCATE_CHARACTER_COUNT)
-  //re-trim if we are in the middle of a word
-  tokenDescriptionTruncated = `${tokenDescriptionTruncated.slice(
-    0,
-    Math.min(tokenDescriptionTruncated.length, tokenDescriptionTruncated.lastIndexOf(' '))
-  )}...`
-  return tokenDescriptionTruncated
-}
-
-const TRUNCATE_CHARACTER_COUNT = 400
 
 export const AboutContainer = styled.div`
   gap: 16px;
@@ -67,7 +36,7 @@ const ResourcesContainer = styled.div`
 
 type AboutSectionProps = {
   address: string
-  chainId: SupportedChainId
+  chainId: ChainId
   description?: string | null
   homepageUrl?: string | null
   twitterName?: string | null
@@ -105,7 +74,7 @@ export function AboutSection({ address, chainId, description, homepageUrl, twitt
       </ThemedText.SubHeaderSmall>
       <ResourcesContainer data-cy="resources-container">
         <Resource
-          name={chainId === SupportedChainId.MAINNET ? 'Etherscan' : 'Block Explorer'}
+          name={chainId === ChainId.MAINNET ? 'Etherscan' : 'Block Explorer'}
           link={`${explorer}${address === 'NATIVE' ? '' : 'address/' + address}`}
         />
         <Resource name="More analytics" link={`${infoLink}tokens/${address}`} />
