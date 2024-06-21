@@ -10,3 +10,4 @@ updates:
       - dependency-name: '@uniswap/token-lists'
     reviewers:
       - 'Uniswap/dependabot-reviewers'
+
